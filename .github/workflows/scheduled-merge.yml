@@ -80,8 +80,8 @@ jobs:
                 if [ ! -z "${{ secrets.GITHUB_GIST_ID }}" ]; then
                   sed -i "s|github-gist-id:.*|github-gist-id: \"${{ secrets.GITHUB_GIST_ID }}\"|g" config/config.yaml
                 fi
-                if [ ! -z "${{ secrets.GITHUB_TOKEN }}" ]; then
-                  sed -i "s|github-token:.*|github-token: \"${{ secrets.GITHUB_TOKEN }}\"|g" config/config.yaml
+                if [ ! -z "${{ secrets.GIST_TOKEN }}" ]; then
+                  sed -i "s|github-token:.*|github-token: \"${{ secrets.GIST_TOKEN }}\"|g" config/config.yaml
                 fi
                 ;;
               "webdav")
@@ -218,7 +218,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GIST_TOKEN }}
           publish_dir: ./output
           publish_branch: gh-pages
           force_orphan: true
