@@ -48,7 +48,6 @@ jobs:
           # 设置其他配置项
           sed -i 's|check-interval:.*|check-interval: 1440|g' config/config.yaml  # 设置为24小时
           sed -i 's|print-progress:.*|print-progress: true|g' config/config.yaml  # 开启进度显示
-          sed -i 's|keep-success-proxies:.*|keep-success-proxies: true|g' config/config.yaml  # 保留成功的节点
           
           # 如果有通知配置，设置通知
           if [ ! -z "${{ secrets.APPRISE_API_SERVER }}" ]; then

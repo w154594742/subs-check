@@ -211,4 +211,6 @@ proxy-providers:
 1. GitHub Actions 的构建产物中
 2. 如果仓库的默认分支是 `main` 或 `master`，结果还会被发布到 GitHub Pages (gh-pages 分支)
 
-你可以通过 `https://<你的用户名>.github.io/<仓库名>/` 访问生成的订阅文件。
+你可以通过 `https://<你的用户名>.github.io/<仓库名>/` 访问生成的订阅文件。例如：
+`https://w154594742.github.io/subs-check/all.yaml`
+`https://w154594742.github.io/subs-check/all.txt`
