@@ -26,8 +26,8 @@ jobs:
           cp config/config.example.yaml config/config.yaml
           
           # 使用GitHub Secrets替换订阅链接
-          # 使用sed替换订阅链接部分
-          sed -i 's|sub-urls:.*|sub-urls:|g' config/config.yaml
+          # 完全清除示例配置文件中的订阅链接
+          sed -i '/sub-urls:/,/^[^[:space:]-]/ {/sub-urls:/!d}' config/config.yaml
           
           # 添加来自GitHub Secrets的订阅链接
           # 将SUB_URLS按行分割并添加到配置文件
