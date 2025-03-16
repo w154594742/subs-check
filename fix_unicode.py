@@ -37,37 +37,80 @@ def fix_unicode_escapes(file_path):
         # 替换 \u4e2d 格式的Unicode
         content = re.sub(r'\\u([0-9a-fA-F]{4})', replace_unicode, content)
         
-        # ***** 直接处理所有节点名称 *****
-        # 使用正则表达式查找YAML文件中的所有name字段和ps字段
+        # ***** 处理所有节点名称并确保唯一性 *****
         lines = content.split('\n')
+        
+        # 跟踪已使用的节点名称
+        used_names = {}
+        name_counter = {}
+        
+        # 第一遍：收集所有名称并计数
+        for line in lines:
+            # 匹配name和ps字段的值
+            name_match = re.search(r'\s*name:\s*["\'](.+?)["\']', line)
+            ps_match = re.search(r'\s*ps:\s*["\'](.+?)["\']', line)
+            
+            if name_match:
+                name = name_match.group(1)
+                name_counter[name] = name_counter.get(name, 0) + 1
+            
+            if ps_match:
+                ps = ps_match.group(1)
+                name_counter[ps] = name_counter.get(ps, 0) + 1
+        
+        # 第二遍：根据计数修改重复的名称
         for i in range(len(lines)):
             line = lines[i]
             
             # 处理name字段
-            if re.match(r'\s*name:\s*["\']', line):
-                # 使用通用替换方法，将所有name字段的值替换为"节点"
-                if "权威商" in line or "狸床床" in line or "CloudFlare" in line or "cloudflare" in line:
-                    quote_type = "'" if "'" in line else "\""
-                    lines[i] = re.sub(r'name:\s*["\'].*?["\']', f'name: {quote_type}节点{quote_type}', line)
-                # 如果是普通节点名称，也进行简化
-                elif len(line) > 15:  # 避免替换那些可能已经是简单名称的节点
-                    quote_type = "'" if "'" in line else "\""
-                    lines[i] = re.sub(r'name:\s*["\'].*?["\']', f'name: {quote_type}节点{quote_type}', line)
+            name_match = re.search(r'\s*name:\s*["\'](.+?)["\']', line)
+            if name_match:
+                name = name_match.group(1)
+                quote_type = "'" if "'" in line else "\""
+                
+                # 先进行通用替换，对特殊名称或长名称进行简化
+                if "权威商" in name or "狸床床" in name or "CloudFlare" in name or "cloudflare" in name or len(name) > 15:
+                    simplified_name = "节点"
+                else:
+                    simplified_name = name
+                
+                # 然后处理重复性
+                if simplified_name in used_names:
+                    used_names[simplified_name] += 1
+                    new_name = f"{simplified_name}_{used_names[simplified_name]}"
+                else:
+                    used_names[simplified_name] = 0
+                    new_name = simplified_name
+                
+                # 替换名称
+                lines[i] = re.sub(r'name:\s*["\'].*?["\']', f'name: {quote_type}{new_name}{quote_type}', line)
             
             # 处理ps字段
-            if re.match(r'\s*ps:\s*["\']', line):
-                # 使用通用替换方法，将所有ps字段的值替换为"节点"
-                if "权威商" in line or "狸床床" in line or "CloudFlare" in line or "cloudflare" in line:
-                    quote_type = "'" if "'" in line else "\""
-                    lines[i] = re.sub(r'ps:\s*["\'].*?["\']', f'ps: {quote_type}节点{quote_type}', line)
-                # 如果是普通节点名称，也进行简化
-                elif len(line) > 15:  # 避免替换那些可能已经是简单名称的节点
-                    quote_type = "'" if "'" in line else "\""
-                    lines[i] = re.sub(r'ps:\s*["\'].*?["\']', f'ps: {quote_type}节点{quote_type}', line)
+            ps_match = re.search(r'\s*ps:\s*["\'](.+?)["\']', line)
+            if ps_match:
+                ps = ps_match.group(1)
+                quote_type = "'" if "'" in line else "\""
+                
+                # 先进行通用替换，对特殊名称或长名称进行简化
+                if "权威商" in ps or "狸床床" in ps or "CloudFlare" in ps or "cloudflare" in ps or len(ps) > 15:
+                    simplified_ps = "节点"
+                else:
+                    simplified_ps = ps
+                
+                # 然后处理重复性
+                if simplified_ps in used_names:
+                    used_names[simplified_ps] += 1
+                    new_ps = f"{simplified_ps}_{used_names[simplified_ps]}"
+                else:
+                    used_names[simplified_ps] = 0
+                    new_ps = simplified_ps
+                
+                # 替换名称
+                lines[i] = re.sub(r'ps:\s*["\'].*?["\']', f'ps: {quote_type}{new_ps}{quote_type}', line)
         
         content = '\n'.join(lines)
         
-        # 8. 最后清理剩余的特殊字符和国内标识
+        # 清理剩余的特殊字符和国内标识
         content = re.sub(r'国内\s+', '', content)
         content = re.sub(r'\s+国内', '', content)
         content = re.sub(r'挪国内', '挪威', content)

@@ -184,8 +184,8 @@ proxy-providers:
 3. 根据你选择的保存方法，可能需要添加额外的 Secrets:
 
    **如果使用 gist 保存:**
-   - `GITHUB_GIST_ID`: Gist ID
-   - `GITHUB_TOKEN`: GitHub 个人访问令牌
+   - `GIST_ID`: Gist ID
+   - `GIST_TOKEN`: GitHub 个人访问令牌
 
    **如果使用 webdav 保存:**
    - `WEBDAV_URL`: WebDAV 服务器地址
