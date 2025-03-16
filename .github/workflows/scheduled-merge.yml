@@ -91,7 +91,7 @@ jobs:
                 ;;
             esac
           else
-            # 如果没有设置SAVE_METHOD，默认使用local
+            # 如果没有设置SAVE_METHOD，默认使用local 
             sed -i "s|save-method:.*|save-method: local|g" config/config.yaml
           fi
           
