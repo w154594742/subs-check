@@ -48,6 +48,7 @@ jobs:
           # 设置其他配置项
           sed -i 's|check-interval:.*|check-interval: 1440|g' config/config.yaml  # 设置为24小时
           sed -i 's|print-progress:.*|print-progress: true|g' config/config.yaml  # 开启进度显示
+          sed -i 's|rename-node:.*|rename-node: true|g' config/config.yaml  # 开启以节点IP查询位置重命名节点
           
           # 如果有通知配置，设置通知
           if [ ! -z "${{ secrets.APPRISE_API_SERVER }}" ]; then
@@ -133,8 +134,8 @@ jobs:
           # 添加执行权限
           chmod +x monitor.sh
           
-          # 运行监控脚本，最多运行30分钟
-          timeout 30m ./monitor.sh
+          # 运行监控脚本，最多运行120分钟
+          timeout 120m ./monitor.sh
           
           # 确保工作流继续执行
           exit 0
