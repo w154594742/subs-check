@@ -5,6 +5,9 @@ on:
     # 每天早上8点和晚上8点执行（UTC时间，对应北京时间16:00和次日04:00）
     - cron: '0 0,12 * * *'
   workflow_dispatch:  # 允许手动触发
+  push:
+    branches:
+      - dev  # 添加dev分支的push触发，帮助GitHub Actions识别工作流
 
 jobs:
   merge-subscriptions:
@@ -108,7 +111,7 @@ jobs:
           
       # 可选：将结果推送到仓库的gh-pages分支
       - name: 部署到GitHub Pages
-        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
