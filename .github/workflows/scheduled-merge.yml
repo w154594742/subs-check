@@ -113,52 +113,11 @@ jobs:
           
       - name: 运行合并订阅任务
         run: |
-          # 创建一个脚本来监控Docker输出并在检测到"下次检查时间"时终止Docker
-          echo '#!/bin/bash' > monitor.sh
-          echo '' >> monitor.sh
-          echo '# 启动Docker容器' >> monitor.sh
-          echo 'echo "开始运行Docker容器..."' >> monitor.sh
-          echo 'docker run --rm \\' >> monitor.sh
-          echo '  -v ${{ github.workspace }}/config:/app/config \\' >> monitor.sh
-          echo '  -v ${{ github.workspace }}/output:/app/output \\' >> monitor.sh
-          echo '  ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do' >> monitor.sh
-          echo '    echo "$line"' >> monitor.sh
-          echo '    if [[ "$line" == *"下次检查时间"* ]]; then' >> monitor.sh
-          echo '      echo "检测到'\''下次检查时间'\''输出，终止Docker容器..."' >> monitor.sh
-          echo '      pkill -P $$ docker' >> monitor.sh
-          echo '      break' >> monitor.sh
-          echo '    fi' >> monitor.sh
-          echo '  done' >> monitor.sh
-          echo '' >> monitor.sh
-          echo '# 检查Docker运行结果' >> monitor.sh
-          echo 'DOCKER_EXIT_CODE=$?' >> monitor.sh
-          echo 'echo "Docker容器退出代码: $DOCKER_EXIT_CODE"' >> monitor.sh
-          echo 'if [ $DOCKER_EXIT_CODE -ne 0 ] && [ $DOCKER_EXIT_CODE -ne 143 ]; then' >> monitor.sh
-          echo '  echo "警告: Docker容器异常退出，可能未完成订阅合并"' >> monitor.sh
-          echo 'fi' >> monitor.sh
-          
-          # 添加执行权限
-          chmod +x monitor.sh
-          
-          # 使用timeout作为备份，确保最多运行30分钟
-          echo "开始执行monitor.sh脚本..."
-          timeout 30m ./monitor.sh
-          
-          # 检查输出文件是否生成
-          echo "检查输出文件是否生成..."
-          if [ -f "output/all.yaml" ]; then
-            echo "成功生成all.yaml文件"
-            ls -la output/all.yaml
-          else
-            echo "警告: 未生成all.yaml文件"
-          fi
-          
-          if [ -f "output/all.txt" ]; then
-            echo "成功生成all.txt文件"
-            ls -la output/all.txt
-          else
-            echo "警告: 未生成all.txt文件"
-          fi
+          # 直接运行Docker命令
+          docker run --rm \
+            -v ${{ github.workspace }}/config:/app/config \
+            -v ${{ github.workspace }}/output:/app/output \
+            ghcr.io/beck-8/subs-check:latest
           
           # 确保工作流继续执行
           exit 0
@@ -175,24 +134,6 @@ jobs:
         run: |
           echo "输出目录内容:"
           ls -la output/
-          
-          # 如果没有生成订阅文件，创建默认内容
-          if [ ! -f "output/all.yaml" ]; then
-            echo "未找到all.yaml文件，创建默认内容..."
-            echo "proxies:" > output/all.yaml
-            echo "  - name: 默认节点" >> output/all.yaml
-            echo "    type: http" >> output/all.yaml
-            echo "    server: example.com" >> output/all.yaml
-            echo "    port: 80" >> output/all.yaml
-            echo "    username: username" >> output/all.yaml
-            echo "    password: password" >> output/all.yaml
-            echo "    tls: false" >> output/all.yaml
-          fi
-          
-          if [ ! -f "output/all.txt" ]; then
-            echo "未找到all.txt文件，创建默认内容..."
-            echo "这是一个默认的Base64订阅内容，请检查工作流配置" > output/all.txt
-          fi
           
       # 修复中文乱码问题
       - name: 修复中文乱码问题
