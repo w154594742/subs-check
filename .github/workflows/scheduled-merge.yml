@@ -158,6 +158,10 @@ jobs:
         run: |
           echo "检查并修复中文乱码问题..."
           
+          # 修改输出文件的权限
+          sudo chown -R $USER:$USER output/
+          sudo chmod -R 755 output/
+          
           # 确保文件使用UTF-8编码
           if [ -f "output/all.yaml" ]; then
             # 移除Content-Type头
