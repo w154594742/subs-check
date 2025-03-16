@@ -97,10 +97,16 @@ jobs:
           
       - name: 运行合并订阅任务
         run: |
-          docker run --rm \
+          # 使用timeout命令，设置最大运行时间为30分钟
+          # 这个时间应该足够完成一次检查，但不会让容器长时间运行
+          timeout 30m docker run --rm \
             -v ${{ github.workspace }}/config:/app/config \
             -v ${{ github.workspace }}/output:/app/output \
             ghcr.io/beck-8/subs-check:latest
+          
+          # 确保即使Docker被timeout终止，工作流也能继续执行
+          # timeout命令在超时终止进程时会返回非零退出码，但我们不希望这导致工作流失败
+          exit 0
             
       - name: 上传结果
         uses: actions/upload-artifact@v4
