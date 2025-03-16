@@ -148,94 +148,92 @@ jobs:
         run: |
           echo "检查并修复中文乱码问题..."
           
-          # 安装必要的工具
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install pyyaml
-          
-          # 创建简单的Python脚本处理YAML文件
-          echo '#!/usr/bin/env python3
-import yaml, sys, re, os
-
-# 处理YAML文件
-def process_yaml(file_path):
-    try:
-        # 读取文件内容
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        
-        # 替换Unicode转义序列
-        content = re.sub(r"\\\\U([0-9a-fA-F]{8})", lambda m: chr(int(m.group(1), 16)), content)
-        content = re.sub(r"\\\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), content)
-        
-        # 解析YAML
-        data = yaml.safe_load(content)
-        
-        # 重新写入文件
-        with open(file_path, "w", encoding="utf-8") as f:
-            yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-        
-        print(f"成功处理文件: {file_path}")
-        return True
-    except Exception as e:
-        print(f"处理文件时出错: {e}")
-        return False
-
-# 主函数
-if __name__ == "__main__":
-    yaml_file = "output/all.yaml"
-    if os.path.exists(yaml_file):
-        process_yaml(yaml_file)
-' > fix_yaml.py
-          
-          # 添加执行权限并运行
-          chmod +x fix_yaml.py
-          python3 fix_yaml.py
-          
-          # 如果Python处理失败，尝试使用sed直接替换
-          if [ $? -ne 0 ]; then
-            echo "Python处理失败，尝试使用sed直接替换..."
-            if [ -f "output/all.yaml" ]; then
-              # 使用sed替换Unicode转义序列
-              sed -i 's/\\U\([0-9a-fA-F]\{8\}\)/\\u\1/g' output/all.yaml
-              sed -i 's/\\u\([0-9a-fA-F]\{4\}\)/\&#x\1;/g' output/all.yaml
+          # 确保文件使用UTF-8编码
+          if [ -f "output/all.yaml" ]; then
+            # 移除Content-Type头
+            if grep -q "Content-Type" "output/all.yaml"; then
+              sed -i '1d' output/all.yaml
+              echo "已移除Content-Type头"
             fi
+            
+            # 使用sed替换Unicode转义序列
+            # 替换形如 \\U0001F1FA\\U0001F1F8 的国旗表情
+            sed -i 's/\\\\U0001F1[A-F0-9][A-F0-9]\\\\U0001F1[A-F0-9][A-F0-9]/国家/g' output/all.yaml
+            
+            # 替换常见的中文Unicode转义
+            sed -i 's/\\u4e2d\\u56fd/中国/g' output/all.yaml
+            sed -i 's/\\u53f0\\u6e7e/台湾/g' output/all.yaml
+            sed -i 's/\\u9999\\u6e2f/香港/g' output/all.yaml
+            sed -i 's/\\u65e5\\u672c/日本/g' output/all.yaml
+            sed -i 's/\\u97e9\\u56fd/韩国/g' output/all.yaml
+            sed -i 's/\\u7f8e\\u56fd/美国/g' output/all.yaml
+            sed -i 's/\\u65b0\\u52a0\\u5761/新加坡/g' output/all.yaml
+            sed -i 's/\\u5370\\u5ea6/印度/g' output/all.yaml
+            sed -i 's/\\u4fc4\\u7f57\\u65af/俄罗斯/g' output/all.yaml
+            sed -i 's/\\u82f1\\u56fd/英国/g' output/all.yaml
+            sed -i 's/\\u5fb7\\u56fd/德国/g' output/all.yaml
+            sed -i 's/\\u6cd5\\u56fd/法国/g' output/all.yaml
+            sed -i 's/\\u610f\\u5927\\u5229/意大利/g' output/all.yaml
+            sed -i 's/\\u52a0\\u62ff\\u5927/加拿大/g' output/all.yaml
+            sed -i 's/\\u6fb3\\u5927\\u5229\\u4e9a/澳大利亚/g' output/all.yaml
+            
+            echo "已处理 all.yaml 文件编码"
           fi
           
-          # 处理Base64文件
           if [ -f "output/all.txt" ]; then
-            echo "处理 all.txt 文件..."
-            iconv -f UTF-8 -t UTF-8//IGNORE output/all.txt -o output/all.txt.tmp
-            mv output/all.txt.tmp output/all.txt
+            # 使用sed替换Unicode转义序列
+            # 替换形如 \\U0001F1FA\\U0001F1F8 的国旗表情
+            sed -i 's/\\\\U0001F1[A-F0-9][A-F0-9]\\\\U0001F1[A-F0-9][A-F0-9]/国家/g' output/all.txt
+            
+            # 替换常见的中文Unicode转义
+            sed -i 's/\\u4e2d\\u56fd/中国/g' output/all.txt
+            sed -i 's/\\u53f0\\u6e7e/台湾/g' output/all.txt
+            sed -i 's/\\u9999\\u6e2f/香港/g' output/all.txt
+            sed -i 's/\\u65e5\\u672c/日本/g' output/all.txt
+            sed -i 's/\\u97e9\\u56fd/韩国/g' output/all.txt
+            sed -i 's/\\u7f8e\\u56fd/美国/g' output/all.txt
+            sed -i 's/\\u65b0\\u52a0\\u5761/新加坡/g' output/all.txt
+            sed -i 's/\\u5370\\u5ea6/印度/g' output/all.txt
+            sed -i 's/\\u4fc4\\u7f57\\u65af/俄罗斯/g' output/all.txt
+            sed -i 's/\\u82f1\\u56fd/英国/g' output/all.txt
+            sed -i 's/\\u5fb7\\u56fd/德国/g' output/all.txt
+            sed -i 's/\\u6cd5\\u56fd/法国/g' output/all.txt
+            sed -i 's/\\u610f\\u5927\\u5229/意大利/g' output/all.txt
+            sed -i 's/\\u52a0\\u62ff\\u5927/加拿大/g' output/all.txt
+            sed -i 's/\\u6fb3\\u5927\\u5229\\u4e9a/澳大利亚/g' output/all.txt
+            
+            echo "已处理 all.txt 文件编码"
           fi
           
-          # 创建索引页面
-          echo '<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>订阅链接</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    h1 { color: #333; }
-    .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-    .link-box h2 { margin-top: 0; color: #444; }
-    .link-box a { display: block; margin: 10px 0; word-break: break-all; }
-  </style>
-</head>
-<body>
-  <h1>订阅链接</h1>
-  <div class="link-box">
-    <h2>Clash/Mihomo 格式</h2>
-    <a href="all.yaml">all.yaml</a>
-  </div>
-  <div class="link-box">
-    <h2>Base64 格式</h2>
-    <a href="all.txt">all.txt</a>
-  </div>
-</body>
-</html>' > output/index.html
+          # 创建一个包含正确编码声明的HTML文件，用于访问YAML
+          cat > output/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>订阅链接</title>
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+              h1 { color: #333; }
+              .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+              .link-box h2 { margin-top: 0; color: #444; }
+              .link-box a { display: block; margin: 10px 0; word-break: break-all; }
+            </style>
+          </head>
+          <body>
+            <h1>订阅链接</h1>
+            <div class="link-box">
+              <h2>Clash/Mihomo 格式</h2>
+              <a href="all.yaml">all.yaml</a>
+            </div>
+            <div class="link-box">
+              <h2>Base64 格式</h2>
+              <a href="all.txt">all.txt</a>
+            </div>
+          </body>
+          </html>
+          EOF
           
       # 配置GitHub Pages
       - name: 配置GitHub Pages
