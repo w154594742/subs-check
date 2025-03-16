@@ -148,25 +148,71 @@ jobs:
         run: |
           echo "检查并修复中文乱码问题..."
           
+          # 安装必要的工具
+          sudo apt-get update
+          sudo apt-get install -y python3-yaml
+          
           # 确保文件使用UTF-8编码
           if [ -f "output/all.yaml" ]; then
-            # 创建临时文件，确保使用UTF-8编码
-            cat output/all.yaml | python3 -c "import sys; print(sys.stdin.read())" > output/all.yaml.tmp
-            # 替换原文件
-            mv output/all.yaml.tmp output/all.yaml
+            echo "处理 all.yaml 文件..."
             
-            # 添加明确的Content-Type头
-            echo "# Content-Type: text/yaml; charset=utf-8" > output/all.yaml.header
-            cat output/all.yaml >> output/all.yaml.header
-            mv output/all.yaml.header output/all.yaml
+            # 创建Python脚本来处理YAML文件
+            cat > fix_yaml.py << 'EOF'
+#!/usr/bin/env python3
+import yaml
+import sys
+import re
+
+def custom_str_presenter(dumper, data):
+    # 自定义字符串表示方法，确保中文不被转义
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+# 注册自定义表示方法
+yaml.add_representer(str, custom_str_presenter)
+
+# 读取YAML文件
+try:
+    with open("output/all.yaml", "r", encoding="utf-8") as f:
+        content = f.read()
+    
+    # 直接替换Unicode转义序列
+    content = re.sub(r'\\U([0-9a-fA-F]{8})', lambda m: chr(int(m.group(1), 16)), content)
+    content = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), content)
+    
+    # 解析YAML
+    data = yaml.safe_load(content)
+    
+    # 重新写入YAML文件
+    with open("output/all.yaml", "w", encoding="utf-8") as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    
+    print("YAML文件处理成功")
+except Exception as e:
+    print(f"处理YAML文件时出错: {e}")
+    sys.exit(1)
+EOF
+            
+            # 添加执行权限
+            chmod +x fix_yaml.py
+            
+            # 执行Python脚本
+            python3 fix_yaml.py
+            
+            # 如果Python处理失败，尝试使用sed直接替换
+            if [ $? -ne 0 ]; then
+              echo "Python处理失败，尝试使用sed直接替换..."
+              # 替换Unicode转义序列
+              sed -i 's/\\U\([0-9a-fA-F]\{8\}\)/\\u\1/g' output/all.yaml
+              sed -i 's/\\u\([0-9a-fA-F]\{4\}\)/\&#x\1;/g' output/all.yaml
+            fi
             
             echo "已处理 all.yaml 文件编码"
           fi
           
           if [ -f "output/all.txt" ]; then
-            # 创建临时文件，确保使用UTF-8编码
-            cat output/all.txt | python3 -c "import sys; print(sys.stdin.read())" > output/all.txt.tmp
-            # 替换原文件
+            echo "处理 all.txt 文件..."
+            # 使用iconv确保UTF-8编码
+            iconv -f UTF-8 -t UTF-8//IGNORE output/all.txt -o output/all.txt.tmp
             mv output/all.txt.tmp output/all.txt
             echo "已处理 all.txt 文件编码"
           fi
