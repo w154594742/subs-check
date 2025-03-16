@@ -110,22 +110,20 @@ jobs:
       - name: 运行合并订阅任务
         run: |
           # 创建一个脚本来监控Docker输出并在检测到"下次检查时间"时终止Docker
-          cat > monitor.sh << 'EOF'
-          #!/bin/bash
-          
-          # 启动Docker容器
-          docker run --rm \
-            -v ${{ github.workspace }}/config:/app/config \
-            -v ${{ github.workspace }}/output:/app/output \
-            ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do
-              echo "$line"
-              if [[ "$line" == *"下次检查时间"* ]]; then
-                echo "检测到'下次检查时间'输出，终止Docker容器..."
-                pkill -P $$ docker
-                break
-              fi
-            done
-          EOF
+          echo '#!/bin/bash' > monitor.sh
+          echo '' >> monitor.sh
+          echo '# 启动Docker容器' >> monitor.sh
+          echo 'docker run --rm \\' >> monitor.sh
+          echo '  -v ${{ github.workspace }}/config:/app/config \\' >> monitor.sh
+          echo '  -v ${{ github.workspace }}/output:/app/output \\' >> monitor.sh
+          echo '  ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do' >> monitor.sh
+          echo '    echo "$line"' >> monitor.sh
+          echo '    if [[ "$line" == *"下次检查时间"* ]]; then' >> monitor.sh
+          echo '      echo "检测到'\''下次检查时间'\''输出，终止Docker容器..."' >> monitor.sh
+          echo '      pkill -P $$ docker' >> monitor.sh
+          echo '      break' >> monitor.sh
+          echo '    fi' >> monitor.sh
+          echo '  done' >> monitor.sh
           
           # 添加执行权限
           chmod +x monitor.sh
@@ -185,32 +183,32 @@ jobs:
           fi
           
           # 创建一个包含正确编码声明的HTML文件，用于访问YAML
-          echo '<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>订阅链接</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    h1 { color: #333; }
-    .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-    .link-box h2 { margin-top: 0; color: #444; }
-    .link-box a { display: block; margin: 10px 0; word-break: break-all; }
-  </style>
-</head>
-<body>
-  <h1>订阅链接</h1>
-  <div class="link-box">
-    <h2>Clash/Mihomo 格式</h2>
-    <a href="all.yaml">all.yaml</a>
-  </div>
-  <div class="link-box">
-    <h2>Base64 格式</h2>
-    <a href="all.txt">all.txt</a>
-  </div>
-</body>
-</html>' > output/index.html
+          echo '<!DOCTYPE html>' > output/index.html
+          echo '<html lang="zh-CN">' >> output/index.html
+          echo '<head>' >> output/index.html
+          echo '  <meta charset="UTF-8">' >> output/index.html
+          echo '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' >> output/index.html
+          echo '  <title>订阅链接</title>' >> output/index.html
+          echo '  <style>' >> output/index.html
+          echo '    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }' >> output/index.html
+          echo '    h1 { color: #333; }' >> output/index.html
+          echo '    .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }' >> output/index.html
+          echo '    .link-box h2 { margin-top: 0; color: #444; }' >> output/index.html
+          echo '    .link-box a { display: block; margin: 10px 0; word-break: break-all; }' >> output/index.html
+          echo '  </style>' >> output/index.html
+          echo '</head>' >> output/index.html
+          echo '<body>' >> output/index.html
+          echo '  <h1>订阅链接</h1>' >> output/index.html
+          echo '  <div class="link-box">' >> output/index.html
+          echo '    <h2>Clash/Mihomo 格式</h2>' >> output/index.html
+          echo '    <a href="all.yaml">all.yaml</a>' >> output/index.html
+          echo '  </div>' >> output/index.html
+          echo '  <div class="link-box">' >> output/index.html
+          echo '    <h2>Base64 格式</h2>' >> output/index.html
+          echo '    <a href="all.txt">all.txt</a>' >> output/index.html
+          echo '  </div>' >> output/index.html
+          echo '</body>' >> output/index.html
+          echo '</html>' >> output/index.html
           
       # 配置GitHub Pages
       - name: 配置GitHub Pages
