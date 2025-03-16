@@ -160,3 +160,55 @@ proxy-providers:
       interval: 60
     path: ./proxy_provider/ALL.yaml
 ```
+
+## GitHub Actions 定时任务
+
+本项目支持使用GitHub Actions自动定时执行合并订阅节点的任务。默认配置为每天早上8点和晚上8点（UTC时间0点和12点，对应北京时间8点和20点）执行。
+
+### 配置步骤
+
+1. Fork 本仓库到你的GitHub账号
+2. 在仓库的 Settings -> Secrets and variables -> Actions 中添加以下 Secrets:
+
+   **设置订阅链接：**
+   - `SUB_URLS`: 多个订阅链接，每行一个。例如：
+     ```
+     https://example.com/sub1.txt
+     https://example.com/sub2.yaml
+     https://example.com/sub3?token=abcdef
+     ```
+
+   **其他必要配置：**
+   - `SAVE_METHOD`: 保存方法，可选值: `local`, `gist`, `webdav`, `r2`（如果不设置，默认为`local`）
+
+3. 根据你选择的保存方法，可能需要添加额外的 Secrets:
+
+   **如果使用 gist 保存:**
+   - `GITHUB_GIST_ID`: Gist ID
+   - `GITHUB_TOKEN`: GitHub 个人访问令牌
+
+   **如果使用 webdav 保存:**
+   - `WEBDAV_URL`: WebDAV 服务器地址
+   - `WEBDAV_USERNAME`: WebDAV 用户名
+   - `WEBDAV_PASSWORD`: WebDAV 密码
+
+4. 如果需要通知功能，添加以下 Secrets:
+   - `APPRISE_API_SERVER`: Apprise API 服务器地址
+   - `RECIPIENT_URL`: 通知接收地址
+
+5. 如果需要更新 Mihomo 订阅，添加以下 Secrets:
+   - `MIHOMO_API_URL`: Mihomo API 地址
+   - `MIHOMO_API_SECRET`: Mihomo API 密钥
+
+### 手动触发
+
+除了定时执行外，你还可以在 GitHub 仓库的 Actions 页面手动触发工作流。
+
+### 查看结果
+
+任务执行完成后，结果会被上传到:
+
+1. GitHub Actions 的构建产物中
+2. 如果仓库的默认分支是 `main` 或 `master`，结果还会被发布到 GitHub Pages (gh-pages 分支)
+
+你可以通过 `https://<你的用户名>.github.io/<仓库名>/` 访问生成的订阅文件。

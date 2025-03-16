@@ -1,0 +1,117 @@
+name: 定时合并订阅节点
+
+on:
+  schedule:
+    # 每天早上8点和晚上8点执行（UTC时间，对应北京时间16:00和次日04:00）
+    - cron: '0 0,12 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  merge-subscriptions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+        
+      - name: 创建配置目录
+        run: |
+          mkdir -p output
+          
+      - name: 准备配置文件
+        run: |
+          # 使用示例配置文件作为基础
+          cp config/config.example.yaml config/config.yaml
+          
+          # 使用GitHub Secrets替换订阅链接
+          # 使用sed替换订阅链接部分
+          sed -i 's|sub-urls:.*|sub-urls:|g' config/config.yaml
+          
+          # 添加来自GitHub Secrets的订阅链接
+          # 将SUB_URLS按行分割并添加到配置文件
+          echo "${{ secrets.SUB_URLS }}" | while IFS= read -r line || [ -n "$line" ]; do
+            # 去除可能的引号和逗号
+            cleaned_line=$(echo "$line" | sed 's/^[ \t"]*//;s/[ \t",]*$//')
+            if [ ! -z "$cleaned_line" ]; then
+              echo "  - $cleaned_line" >> config/config.yaml
+            fi
+          done
+          
+          # 设置其他配置项
+          sed -i 's|check-interval:.*|check-interval: 1440|g' config/config.yaml  # 设置为24小时
+          sed -i 's|print-progress:.*|print-progress: false|g' config/config.yaml  # 关闭进度显示
+          sed -i 's|keep-success-proxies:.*|keep-success-proxies: true|g' config/config.yaml  # 保留成功的节点
+          
+          # 如果有通知配置，设置通知
+          if [ ! -z "${{ secrets.APPRISE_API_SERVER }}" ]; then
+            sed -i "s|apprise-api-server:.*|apprise-api-server: \"${{ secrets.APPRISE_API_SERVER }}\"|g" config/config.yaml
+          fi
+          
+          if [ ! -z "${{ secrets.RECIPIENT_URL }}" ]; then
+            sed -i '/recipient-url:/,/^[a-z]/ { /recipient-url:/!d }' config/config.yaml
+            echo "recipient-url:" >> config/config.yaml
+            echo "  - ${{ secrets.RECIPIENT_URL }}" >> config/config.yaml
+          fi
+          
+          # 如果有Mihomo API配置，设置Mihomo API
+          if [ ! -z "${{ secrets.MIHOMO_API_URL }}" ]; then
+            sed -i "s|mihomo-api-url:.*|mihomo-api-url: \"${{ secrets.MIHOMO_API_URL }}\"|g" config/config.yaml
+          fi
+          
+          if [ ! -z "${{ secrets.MIHOMO_API_SECRET }}" ]; then
+            sed -i "s|mihomo-api-secret:.*|mihomo-api-secret: \"${{ secrets.MIHOMO_API_SECRET }}\"|g" config/config.yaml
+          fi
+          
+          # 设置保存方法
+          if [ ! -z "${{ secrets.SAVE_METHOD }}" ]; then
+            sed -i "s|save-method:.*|save-method: ${{ secrets.SAVE_METHOD }}|g" config/config.yaml
+            
+            # 根据保存方法设置相应的配置
+            case "${{ secrets.SAVE_METHOD }}" in
+              "gist")
+                if [ ! -z "${{ secrets.GITHUB_GIST_ID }}" ]; then
+                  sed -i "s|github-gist-id:.*|github-gist-id: \"${{ secrets.GITHUB_GIST_ID }}\"|g" config/config.yaml
+                fi
+                if [ ! -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+                  sed -i "s|github-token:.*|github-token: \"${{ secrets.GITHUB_TOKEN }}\"|g" config/config.yaml
+                fi
+                ;;
+              "webdav")
+                if [ ! -z "${{ secrets.WEBDAV_URL }}" ]; then
+                  sed -i "s|webdav-url:.*|webdav-url: \"${{ secrets.WEBDAV_URL }}\"|g" config/config.yaml
+                fi
+                if [ ! -z "${{ secrets.WEBDAV_USERNAME }}" ]; then
+                  sed -i "s|webdav-username:.*|webdav-username: \"${{ secrets.WEBDAV_USERNAME }}\"|g" config/config.yaml
+                fi
+                if [ ! -z "${{ secrets.WEBDAV_PASSWORD }}" ]; then
+                  sed -i "s|webdav-password:.*|webdav-password: \"${{ secrets.WEBDAV_PASSWORD }}\"|g" config/config.yaml
+                fi
+                ;;
+            esac
+          else
+            # 如果没有设置SAVE_METHOD，默认使用local
+            sed -i "s|save-method:.*|save-method: local|g" config/config.yaml
+          fi
+          
+      - name: 运行合并订阅任务
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/config:/app/config \
+            -v ${{ github.workspace }}/output:/app/output \
+            ghcr.io/${{ github.repository }}:latest
+            
+      - name: 上传结果
+        uses: actions/upload-artifact@v3
+        with:
+          name: merged-subscriptions
+          path: output/
+          retention-days: 1
+          
+      # 可选：将结果推送到仓库的gh-pages分支
+      - name: 部署到GitHub Pages
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages
+          force_orphan: true 
