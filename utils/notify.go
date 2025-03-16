@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/beck-8/subs-check/config"
+	"github.com/w154594742/subs-check/config"
 )
 
 // NotifyRequest 定义发送通知的请求结构

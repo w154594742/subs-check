@@ -57,11 +57,11 @@
 ### docker运行
 
 ```bash
-docker run -d --name subs-check -p 8199:8199 -v ./config:/app/config  -v ./output:/app/output --restart always ghcr.io/beck-8/subs-check:latest
+docker run -d --name subs-check -p 8199:8199 -v ./config:/app/config  -v ./output:/app/output --restart always ghcr.io/w154594742/subs-check:latest
 ```
 ```bash
 # 如果想使用代理，加上环境变量，如
-docker run -d --name subs-check -p 8199:8199  -e HTTP_PROXY=http://192.168.1.1:7890 -e HTTPS_PROXY=http://192.168.1.1:7890 -v ./config:/app/config  -v ./output:/app/output --restart always ghcr.io/beck-8/subs-check:latest
+docker run -d --name subs-check -p 8199:8199  -e HTTP_PROXY=http://192.168.1.1:7890 -e HTTPS_PROXY=http://192.168.1.1:7890 -v ./config:/app/config  -v ./output:/app/output --restart always ghcr.io/w154594742/subs-check:latest
 ```
 
 ### docker-compose
@@ -70,7 +70,7 @@ docker run -d --name subs-check -p 8199:8199  -e HTTP_PROXY=http://192.168.1.1:7
 version: "3"
 services:
   mihomo-check:
-    image: ghcr.io/beck-8/subs-check:latest
+    image: ghcr.io/w154594742/subs-check:latest
     container_name: subs-check
     volumes:
       - ./config:/app/config

@@ -121,7 +121,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/config:/app/config \
             -v ${{ github.workspace }}/output:/app/output \
-            ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do
+            ghcr.io/w154594742/subs-check:latest 2>&1 | while read line; do
             echo "$line"
             if [[ "$line" == *"下次检查时间"* ]]; then
               echo "检测到'下次检查时间'输出，终止Docker容器..."

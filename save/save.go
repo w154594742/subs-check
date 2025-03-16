@@ -11,9 +11,9 @@ import (
 
 	"log/slog"
 
-	"github.com/beck-8/subs-check/check"
-	"github.com/beck-8/subs-check/config"
-	"github.com/beck-8/subs-check/save/method"
+	"github.com/w154594742/subs-check/check"
+	"github.com/w154594742/subs-check/config"
+	"github.com/w154594742/subs-check/save/method"
 	"github.com/buger/jsonparser"
 	"gopkg.in/yaml.v3"
 )
