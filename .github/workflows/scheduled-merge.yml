@@ -150,102 +150,92 @@ jobs:
           
           # 安装必要的工具
           sudo apt-get update
-          sudo apt-get install -y python3-yaml
+          sudo apt-get install -y python3-pip
+          pip3 install pyyaml
           
-          # 确保文件使用UTF-8编码
-          if [ -f "output/all.yaml" ]; then
-            echo "处理 all.yaml 文件..."
-            
-            # 创建Python脚本来处理YAML文件
-            cat > fix_yaml.py << 'EOF'
-#!/usr/bin/env python3
-import yaml
-import sys
-import re
+          # 创建简单的Python脚本处理YAML文件
+          echo '#!/usr/bin/env python3
+import yaml, sys, re, os
 
-def custom_str_presenter(dumper, data):
-    # 自定义字符串表示方法，确保中文不被转义
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+# 处理YAML文件
+def process_yaml(file_path):
+    try:
+        # 读取文件内容
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # 替换Unicode转义序列
+        content = re.sub(r"\\\\U([0-9a-fA-F]{8})", lambda m: chr(int(m.group(1), 16)), content)
+        content = re.sub(r"\\\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), content)
+        
+        # 解析YAML
+        data = yaml.safe_load(content)
+        
+        # 重新写入文件
+        with open(file_path, "w", encoding="utf-8") as f:
+            yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        
+        print(f"成功处理文件: {file_path}")
+        return True
+    except Exception as e:
+        print(f"处理文件时出错: {e}")
+        return False
 
-# 注册自定义表示方法
-yaml.add_representer(str, custom_str_presenter)
-
-# 读取YAML文件
-try:
-    with open("output/all.yaml", "r", encoding="utf-8") as f:
-        content = f.read()
-    
-    # 直接替换Unicode转义序列
-    content = re.sub(r'\\U([0-9a-fA-F]{8})', lambda m: chr(int(m.group(1), 16)), content)
-    content = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), content)
-    
-    # 解析YAML
-    data = yaml.safe_load(content)
-    
-    # 重新写入YAML文件
-    with open("output/all.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-    
-    print("YAML文件处理成功")
-except Exception as e:
-    print(f"处理YAML文件时出错: {e}")
-    sys.exit(1)
-EOF
-            
-            # 添加执行权限
-            chmod +x fix_yaml.py
-            
-            # 执行Python脚本
-            python3 fix_yaml.py
-            
-            # 如果Python处理失败，尝试使用sed直接替换
-            if [ $? -ne 0 ]; then
-              echo "Python处理失败，尝试使用sed直接替换..."
-              # 替换Unicode转义序列
+# 主函数
+if __name__ == "__main__":
+    yaml_file = "output/all.yaml"
+    if os.path.exists(yaml_file):
+        process_yaml(yaml_file)
+' > fix_yaml.py
+          
+          # 添加执行权限并运行
+          chmod +x fix_yaml.py
+          python3 fix_yaml.py
+          
+          # 如果Python处理失败，尝试使用sed直接替换
+          if [ $? -ne 0 ]; then
+            echo "Python处理失败，尝试使用sed直接替换..."
+            if [ -f "output/all.yaml" ]; then
+              # 使用sed替换Unicode转义序列
               sed -i 's/\\U\([0-9a-fA-F]\{8\}\)/\\u\1/g' output/all.yaml
               sed -i 's/\\u\([0-9a-fA-F]\{4\}\)/\&#x\1;/g' output/all.yaml
             fi
-            
-            echo "已处理 all.yaml 文件编码"
           fi
           
+          # 处理Base64文件
           if [ -f "output/all.txt" ]; then
             echo "处理 all.txt 文件..."
-            # 使用iconv确保UTF-8编码
             iconv -f UTF-8 -t UTF-8//IGNORE output/all.txt -o output/all.txt.tmp
             mv output/all.txt.tmp output/all.txt
-            echo "已处理 all.txt 文件编码"
           fi
           
-          # 创建一个包含正确编码声明的HTML文件，用于访问YAML
-          cat > output/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="zh-CN">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>订阅链接</title>
-            <style>
-              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-              h1 { color: #333; }
-              .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-              .link-box h2 { margin-top: 0; color: #444; }
-              .link-box a { display: block; margin: 10px 0; word-break: break-all; }
-            </style>
-          </head>
-          <body>
-            <h1>订阅链接</h1>
-            <div class="link-box">
-              <h2>Clash/Mihomo 格式</h2>
-              <a href="all.yaml">all.yaml</a>
-            </div>
-            <div class="link-box">
-              <h2>Base64 格式</h2>
-              <a href="all.txt">all.txt</a>
-            </div>
-          </body>
-          </html>
-          EOF
+          # 创建索引页面
+          echo '<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>订阅链接</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #333; }
+    .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    .link-box h2 { margin-top: 0; color: #444; }
+    .link-box a { display: block; margin: 10px 0; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>订阅链接</h1>
+  <div class="link-box">
+    <h2>Clash/Mihomo 格式</h2>
+    <a href="all.yaml">all.yaml</a>
+  </div>
+  <div class="link-box">
+    <h2>Base64 格式</h2>
+    <a href="all.txt">all.txt</a>
+  </div>
+</body>
+</html>' > output/index.html
           
       # 配置GitHub Pages
       - name: 配置GitHub Pages
