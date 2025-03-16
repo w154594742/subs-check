@@ -101,65 +101,12 @@ jobs:
             sed -i "s|save-method:.*|save-method: local|g" config/config.yaml
           fi
           
-      - name: 运行合并订阅任务
+      - name: 准备Python脚本
         run: |
-          # 创建一个脚本来监控Docker输出并在检测到"下次检查时间"时终止Docker
-          cat > monitor.sh << 'EOF'
-          #!/bin/bash
-          
-          # 启动Docker容器
-          docker run --rm \
-            -v ${{ github.workspace }}/config:/app/config \
-            -v ${{ github.workspace }}/output:/app/output \
-            ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do
-              echo "$line"
-              if [[ "$line" == *"下次检查时间"* ]]; then
-                echo "检测到'下次检查时间'输出，终止Docker容器..."
-                pkill -P $$ docker
-                break
-              fi
-            done
-          EOF
-          
-          # 添加执行权限
-          chmod +x monitor.sh
-          
-          # 使用timeout作为备份，确保最多运行30分钟
-          timeout 30m ./monitor.sh
-          
-          # 确保工作流继续执行
-          exit 0
-            
-      - name: 上传结果
-        uses: actions/upload-artifact@v4
-        with:
-          name: merged-subscriptions
-          path: output/
-          retention-days: 1
-          
-      # 检查输出目录内容
-      - name: 检查输出目录内容
-        run: |
-          echo "输出目录内容:"
-          ls -la output/
-          
-      # 修复中文乱码问题
-      - name: 修复中文乱码问题
-        run: |
-          echo "检查并修复中文乱码问题..."
-          
-          # 确保文件使用UTF-8编码
-          if [ -f "output/all.yaml" ]; then
-            # 移除Content-Type头
-            if grep -q "Content-Type" "output/all.yaml"; then
-              sed -i '1d' output/all.yaml
-              echo "已移除Content-Type头"
-            fi
-            
-            # 创建一个更强大的Python脚本来处理Unicode转义序列
-            cat > fix_unicode.py << 'EOF'
+          cat > fix_unicode.py << 'EOF'
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import re
 import sys
 import json
@@ -248,9 +195,62 @@ if __name__ == "__main__":
         print(f"处理文件失败: {file_path}")
         sys.exit(1)
 EOF
+          chmod +x fix_unicode.py
+          
+      - name: 运行合并订阅任务
+        run: |
+          # 创建一个脚本来监控Docker输出并在检测到"下次检查时间"时终止Docker
+          cat > monitor.sh << 'EOF'
+          #!/bin/bash
+          
+          # 启动Docker容器
+          docker run --rm \
+            -v ${{ github.workspace }}/config:/app/config \
+            -v ${{ github.workspace }}/output:/app/output \
+            ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do
+              echo "$line"
+              if [[ "$line" == *"下次检查时间"* ]]; then
+                echo "检测到'下次检查时间'输出，终止Docker容器..."
+                pkill -P $$ docker
+                break
+              fi
+            done
+          EOF
+          
+          # 添加执行权限
+          chmod +x monitor.sh
+          
+          # 使用timeout作为备份，确保最多运行30分钟
+          timeout 30m ./monitor.sh
+          
+          # 确保工作流继续执行
+          exit 0
             
-            # 添加执行权限
-            chmod +x fix_unicode.py
+      - name: 上传结果
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-subscriptions
+          path: output/
+          retention-days: 1
+          
+      # 检查输出目录内容
+      - name: 检查输出目录内容
+        run: |
+          echo "输出目录内容:"
+          ls -la output/
+          
+      # 修复中文乱码问题
+      - name: 修复中文乱码问题
+        run: |
+          echo "检查并修复中文乱码问题..."
+          
+          # 确保文件使用UTF-8编码
+          if [ -f "output/all.yaml" ]; then
+            # 移除Content-Type头
+            if grep -q "Content-Type" "output/all.yaml"; then
+              sed -i '1d' output/all.yaml
+              echo "已移除Content-Type头"
+            fi
             
             # 运行Python脚本处理文件
             python3 fix_unicode.py output/all.yaml
