@@ -77,8 +77,8 @@ jobs:
             # 根据保存方法设置相应的配置
             case "${{ secrets.SAVE_METHOD }}" in
               "gist")
-                if [ ! -z "${{ secrets.GITHUB_GIST_ID }}" ]; then
-                  sed -i "s|github-gist-id:.*|github-gist-id: \"${{ secrets.GITHUB_GIST_ID }}\"|g" config/config.yaml
+                if [ ! -z "${{ secrets.GIST_ID }}" ]; then
+                  sed -i "s|github-gist-id:.*|github-gist-id: \"${{ secrets.GIST_ID }}\"|g" config/config.yaml
                 fi
                 if [ ! -z "${{ secrets.GIST_TOKEN }}" ]; then
                   sed -i "s|github-token:.*|github-token: \"${{ secrets.GIST_TOKEN }}\"|g" config/config.yaml
