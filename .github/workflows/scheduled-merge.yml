@@ -41,7 +41,7 @@ jobs:
           
           # 设置其他配置项
           sed -i 's|check-interval:.*|check-interval: 1440|g' config/config.yaml  # 设置为24小时
-          sed -i 's|print-progress:.*|print-progress: false|g' config/config.yaml  # 关闭进度显示
+          sed -i 's|print-progress:.*|print-progress: true|g' config/config.yaml  # 开启进度显示
           sed -i 's|keep-success-proxies:.*|keep-success-proxies: true|g' config/config.yaml  # 保留成功的节点
           
           # 如果有通知配置，设置通知
@@ -97,15 +97,31 @@ jobs:
           
       - name: 运行合并订阅任务
         run: |
-          # 使用timeout命令，设置最大运行时间为30分钟
-          # 这个时间应该足够完成一次检查，但不会让容器长时间运行
-          timeout 30m docker run --rm \
+          # 创建一个脚本来监控Docker输出并在检测到"下次检查时间"时终止Docker
+          cat > monitor.sh << 'EOF'
+          #!/bin/bash
+          
+          # 启动Docker容器
+          docker run --rm \
             -v ${{ github.workspace }}/config:/app/config \
             -v ${{ github.workspace }}/output:/app/output \
-            ghcr.io/beck-8/subs-check:latest
+            ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do
+              echo "$line"
+              if [[ "$line" == *"下次检查时间"* ]]; then
+                echo "检测到'下次检查时间'输出，终止Docker容器..."
+                pkill -P $$ docker
+                break
+              fi
+            done
+          EOF
           
-          # 确保即使Docker被timeout终止，工作流也能继续执行
-          # timeout命令在超时终止进程时会返回非零退出码，但我们不希望这导致工作流失败
+          # 添加执行权限
+          chmod +x monitor.sh
+          
+          # 使用timeout作为备份，确保最多运行30分钟
+          timeout 30m ./monitor.sh
+          
+          # 确保工作流继续执行
           exit 0
             
       - name: 上传结果
