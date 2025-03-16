@@ -100,7 +100,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/config:/app/config \
             -v ${{ github.workspace }}/output:/app/output \
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/beck-8/subs-check:latest
             
       - name: 上传结果
         uses: actions/upload-artifact@v4
