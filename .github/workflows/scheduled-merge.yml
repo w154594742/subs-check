@@ -218,7 +218,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GIST_TOKEN }}
+          github_token: ${{ github.token }}
           publish_dir: ./output
           publish_branch: gh-pages
           force_orphan: true
