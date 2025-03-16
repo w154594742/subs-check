@@ -9,6 +9,12 @@ on:
     branches:
       - dev  # 添加dev分支的push触发，帮助GitHub Actions识别工作流
 
+# 添加明确的权限
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   merge-subscriptions:
     runs-on: ubuntu-latest
@@ -131,6 +137,16 @@ jobs:
           path: output/
           retention-days: 1
           
+      # 检查输出目录内容
+      - name: 检查输出目录内容
+        run: |
+          echo "输出目录内容:"
+          ls -la output/
+          
+      # 配置GitHub Pages
+      - name: 配置GitHub Pages
+        uses: actions/configure-pages@v3
+          
       # 可选：将结果推送到仓库的gh-pages分支
       - name: 部署到GitHub Pages
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
@@ -139,4 +155,10 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./output
           publish_branch: gh-pages
-          force_orphan: true 
+          force_orphan: true
+          
+      # 添加部署完成后的检查
+      - name: 部署完成检查
+        run: |
+          echo "GitHub Pages部署已完成"
+          echo "请访问 https://${{ github.repository_owner }}.github.io/subs-check/ 查看结果" 
