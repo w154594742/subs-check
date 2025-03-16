@@ -103,8 +103,12 @@ jobs:
           
       - name: 准备Python脚本
         run: |
-          # 复制仓库中的Python脚本
-          cp $GITHUB_WORKSPACE/fix_unicode.py ./fix_unicode.py
+          # 检查文件是否存在，如果不存在才复制
+          if [ ! -f "./fix_unicode.py" ]; then
+            # 复制仓库中的Python脚本
+            cp $GITHUB_WORKSPACE/fix_unicode.py ./fix_unicode.py
+          fi
+          # 确保脚本有执行权限
           chmod +x fix_unicode.py
           
       - name: 运行合并订阅任务
