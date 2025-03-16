@@ -113,11 +113,29 @@ jobs:
           
       - name: 运行合并订阅任务
         run: |
-          # 直接运行Docker命令
+          # 创建一个简单的监控脚本
+          cat > monitor.sh << 'EOF'
+          #!/bin/bash
+          
+          # 启动Docker容器并监控输出
           docker run --rm \
             -v ${{ github.workspace }}/config:/app/config \
             -v ${{ github.workspace }}/output:/app/output \
-            ghcr.io/beck-8/subs-check:latest
+            ghcr.io/beck-8/subs-check:latest 2>&1 | while read line; do
+            echo "$line"
+            if [[ "$line" == *"下次检查时间"* ]]; then
+              echo "检测到'下次检查时间'输出，终止Docker容器..."
+              pkill -f "docker run"
+              exit 0
+            fi
+          done
+          EOF
+          
+          # 添加执行权限
+          chmod +x monitor.sh
+          
+          # 运行监控脚本，最多运行30分钟
+          timeout 30m ./monitor.sh
           
           # 确保工作流继续执行
           exit 0
