@@ -40,6 +40,19 @@ def fix_unicode_escapes(file_path):
         # 修复国家名称后面跟着"国内"的问题
         content = re.sub(r'([^\s]+)\s国内', r'\1', content)
         
+        # 处理特殊格式的节点名称
+        # 1. 处理隧道回国点
+        content = re.sub(r'(name: ["\'])隧道回国点[^\'"]*(["\'])', r'\1回国节点\2', content)
+        content = re.sub(r'(ps: ["\'])隧道回国点[^\'"]*(["\'])', r'\1回国节点\2', content)
+        
+        # 2. 处理域名和IP地址
+        content = re.sub(r'(name: ["\'])[^\'"]*(V2CROSS\.COM|v2cross\.com)[^\'"]*(["\'])', r'\1节点\3', content)
+        content = re.sub(r'(ps: ["\'])[^\'"]*(V2CROSS\.COM|v2cross\.com)[^\'"]*(["\'])', r'\1节点\3', content)
+        
+        # 3. 处理带有特殊符号的节点名称
+        content = re.sub(r'(name: ["\'])[^\'"]*(♦|★|☆|◆|●|◎|○|▲|△|▼|▽|◇|□|■|【|】|「|」)[^\'"]*(["\'])', r'\1节点\3', content)
+        content = re.sub(r'(ps: ["\'])[^\'"]*(♦|★|☆|◆|●|◎|○|▲|△|▼|▽|◇|□|■|【|】|「|」)[^\'"]*(["\'])', r'\1节点\3', content)
+        
         # 替换常见的中文国家/地区名称
         country_names = {
             '挪威': '挪威',
@@ -116,6 +129,10 @@ def fix_unicode_escapes(file_path):
             content = re.sub(f'(ps: ")[^"]*({country})[^"]*(")', f'\\1\\2\\3', content)
             # 替换形如 "ps: '挪威 1.1MB/s'" 的格式
             content = re.sub(f"(ps: ')[^']*({country})[^']*(')", f'\\1\\2\\3', content)
+        
+        # 最后清理任何剩余的"国内"文本
+        content = re.sub(r'国内\s+', '', content)
+        content = re.sub(r'\s+国内', '', content)
         
         # 写回文件
         with open(file_path, 'w', encoding='utf-8') as f:
