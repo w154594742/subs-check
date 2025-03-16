@@ -143,6 +143,64 @@ jobs:
           echo "输出目录内容:"
           ls -la output/
           
+      # 修复中文乱码问题
+      - name: 修复中文乱码问题
+        run: |
+          echo "检查并修复中文乱码问题..."
+          
+          # 确保文件使用UTF-8编码
+          if [ -f "output/all.yaml" ]; then
+            # 创建临时文件，确保使用UTF-8编码
+            cat output/all.yaml | python3 -c "import sys; print(sys.stdin.read())" > output/all.yaml.tmp
+            # 替换原文件
+            mv output/all.yaml.tmp output/all.yaml
+            
+            # 添加明确的Content-Type头
+            echo "# Content-Type: text/yaml; charset=utf-8" > output/all.yaml.header
+            cat output/all.yaml >> output/all.yaml.header
+            mv output/all.yaml.header output/all.yaml
+            
+            echo "已处理 all.yaml 文件编码"
+          fi
+          
+          if [ -f "output/all.txt" ]; then
+            # 创建临时文件，确保使用UTF-8编码
+            cat output/all.txt | python3 -c "import sys; print(sys.stdin.read())" > output/all.txt.tmp
+            # 替换原文件
+            mv output/all.txt.tmp output/all.txt
+            echo "已处理 all.txt 文件编码"
+          fi
+          
+          # 创建一个包含正确编码声明的HTML文件，用于访问YAML
+          cat > output/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>订阅链接</title>
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+              h1 { color: #333; }
+              .link-box { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+              .link-box h2 { margin-top: 0; color: #444; }
+              .link-box a { display: block; margin: 10px 0; word-break: break-all; }
+            </style>
+          </head>
+          <body>
+            <h1>订阅链接</h1>
+            <div class="link-box">
+              <h2>Clash/Mihomo 格式</h2>
+              <a href="all.yaml">all.yaml</a>
+            </div>
+            <div class="link-box">
+              <h2>Base64 格式</h2>
+              <a href="all.txt">all.txt</a>
+            </div>
+          </body>
+          </html>
+          EOF
+          
       # 配置GitHub Pages
       - name: 配置GitHub Pages
         uses: actions/configure-pages@v3
