@@ -37,8 +37,12 @@ def fix_unicode_escapes(file_path):
         # 替换 \u4e2d 格式的Unicode
         content = re.sub(r'\\u([0-9a-fA-F]{4})', replace_unicode, content)
         
+        # 修复国家名称后面跟着"国内"的问题
+        content = re.sub(r'([^\s]+)\s国内', r'\1', content)
+        
         # 替换常见的中文国家/地区名称
-        replacements = {
+        country_names = {
+            '挪威': '挪威',
             '中国': '中国',
             '台湾': '台湾',
             '香港': '香港',
@@ -54,6 +58,46 @@ def fix_unicode_escapes(file_path):
             '意大利': '意大利',
             '加拿大': '加拿大',
             '澳大利亚': '澳大利亚',
+            '荷兰': '荷兰',
+            '瑞士': '瑞士',
+            '瑞典': '瑞典',
+            '芬兰': '芬兰',
+            '丹麦': '丹麦',
+            '比利时': '比利时',
+            '奥地利': '奥地利',
+            '西班牙': '西班牙',
+            '葡萄牙': '葡萄牙',
+            '希腊': '希腊',
+            '土耳其': '土耳其',
+            '阿联酋': '阿联酋',
+            '以色列': '以色列',
+            '沙特': '沙特',
+            '巴西': '巴西',
+            '阿根廷': '阿根廷',
+            '墨西哥': '墨西哥',
+            '南非': '南非',
+            '埃及': '埃及',
+            '泰国': '泰国',
+            '马来西亚': '马来西亚',
+            '印尼': '印尼',
+            '菲律宾': '菲律宾',
+            '越南': '越南',
+            '柬埔寨': '柬埔寨',
+            '缅甸': '缅甸',
+            '尼泊尔': '尼泊尔',
+            '巴基斯坦': '巴基斯坦',
+            '孟加拉': '孟加拉',
+            '斯里兰卡': '斯里兰卡',
+            '哈萨克斯坦': '哈萨克斯坦',
+            '乌兹别克斯坦': '乌兹别克斯坦',
+            '乌克兰': '乌克兰',
+            '白俄罗斯': '白俄罗斯',
+            '波兰': '波兰',
+            '捷克': '捷克',
+            '匈牙利': '匈牙利',
+            '罗马尼亚': '罗马尼亚',
+            '保加利亚': '保加利亚',
+            '塞尔维亚': '塞尔维亚',
             'Telegram': 'Telegram',
             'trojan': 'trojan',
             'vmess': 'vmess',
@@ -62,8 +106,16 @@ def fix_unicode_escapes(file_path):
             'ss': 'ss'
         }
         
-        for k, v in replacements.items():
-            content = content.replace(f'\\u{k}', v)
+        # 替换国家名称
+        for country, replacement in country_names.items():
+            # 替换形如 "name: "挪威 1.1MB/s"" 的格式
+            content = re.sub(f'(name: ")[^"]*({country})[^"]*(")', f'\\1\\2\\3', content)
+            # 替换形如 "name: '挪威 1.1MB/s'" 的格式
+            content = re.sub(f"(name: ')[^']*({country})[^']*(')", f'\\1\\2\\3', content)
+            # 替换形如 "ps: "挪威 1.1MB/s"" 的格式
+            content = re.sub(f'(ps: ")[^"]*({country})[^"]*(")', f'\\1\\2\\3', content)
+            # 替换形如 "ps: '挪威 1.1MB/s'" 的格式
+            content = re.sub(f"(ps: ')[^']*({country})[^']*(')", f'\\1\\2\\3', content)
         
         # 写回文件
         with open(file_path, 'w', encoding='utf-8') as f:

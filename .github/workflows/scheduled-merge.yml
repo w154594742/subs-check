@@ -172,17 +172,6 @@ jobs:
             
             # 运行Python脚本处理文件
             python3 fix_unicode.py output/all.yaml
-            
-            # 使用sed进行额外的替换
-            # 替换形如 "name: \"\\U0001F1FA\\U0001F1F8..." 的格式
-            sed -i 's/name: "\\\\U0001F1[A-F0-9][A-F0-9]\\\\U0001F1[A-F0-9][A-F0-9]/name: "国家/g' output/all.yaml
-            
-            # 替换形如 ps: "\\U0001F1FA\\U0001F1F8..." 的格式
-            sed -i 's/ps: "\\\\U0001F1[A-F0-9][A-F0-9]\\\\U0001F1[A-F0-9][A-F0-9]/ps: "国家/g' output/all.yaml
-            
-            # 替换形如 name: '\\U0001F1FA\\U0001F1F8...' 的格式（单引号）
-            sed -i "s/name: '\\\\U0001F1[A-F0-9][A-F0-9]\\\\U0001F1[A-F0-9][A-F0-9]/name: '国家/g" output/all.yaml
-            
             echo "已处理 all.yaml 文件编码"
           fi
           
