@@ -101,15 +101,15 @@ jobs:
             sed -i "s|save-method:.*|save-method: local|g" config/config.yaml
           fi
           
-      - name: 准备Python脚本
-        run: |
-          # 检查文件是否存在，如果不存在才复制
-          if [ ! -f "./fix_unicode.py" ]; then
-            # 复制仓库中的Python脚本
-            cp $GITHUB_WORKSPACE/fix_unicode.py ./fix_unicode.py
-          fi
-          # 确保脚本有执行权限
-          chmod +x fix_unicode.py
+      # - name: 准备Python脚本
+      #   run: |
+      #     # 检查文件是否存在，如果不存在才复制
+      #     if [ ! -f "./fix_unicode.py" ]; then
+      #       # 复制仓库中的Python脚本
+      #       cp $GITHUB_WORKSPACE/fix_unicode.py ./fix_unicode.py
+      #     fi
+      #     # 确保脚本有执行权限
+      #     chmod +x fix_unicode.py
           
       - name: 运行合并订阅任务
         run: |
@@ -163,23 +163,11 @@ jobs:
           sudo chmod -R 755 output/
           
           # 确保文件使用UTF-8编码
-          if [ -f "output/all.yaml" ]; then
-            # 移除Content-Type头
-            if grep -q "Content-Type" "output/all.yaml"; then
-              sed -i '1d' output/all.yaml
-              echo "已移除Content-Type头"
-            fi
-            
-            # 运行Python脚本处理文件
-            python3 fix_unicode.py output/all.yaml
-            echo "已处理 all.yaml 文件编码"
-          fi
-          
-          if [ -f "output/all.txt" ]; then
-            # 运行Python脚本处理文件
-            python3 fix_unicode.py output/all.txt
-            echo "已处理 all.txt 文件编码"
-          fi
+          # if [ -f "output/all.yaml" ]; then
+          #   # 运行Python脚本处理文件
+          #   python3 fix_unicode.py output/all.yaml
+          #   echo "已处理 all.yaml 文件编码"
+          # fi
           
           # 创建一个包含正确编码声明的HTML文件，用于访问YAML
           echo '<!DOCTYPE html>' > output/index.html
