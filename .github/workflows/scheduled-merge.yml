@@ -101,16 +101,6 @@ jobs:
             sed -i "s|save-method:.*|save-method: local|g" config/config.yaml
           fi
           
-      # - name: 准备Python脚本
-      #   run: |
-      #     # 检查文件是否存在，如果不存在才复制
-      #     if [ ! -f "./fix_unicode.py" ]; then
-      #       # 复制仓库中的Python脚本
-      #       cp $GITHUB_WORKSPACE/fix_unicode.py ./fix_unicode.py
-      #     fi
-      #     # 确保脚本有执行权限
-      #     chmod +x fix_unicode.py
-          
       - name: 运行合并订阅任务
         run: |
           # 创建一个简单的监控脚本
@@ -153,21 +143,14 @@ jobs:
           echo "输出目录内容:"
           ls -la output/
           
-      # 修复中文乱码问题
-      - name: 修复中文乱码问题
+      # 添加GitHub Pages index.html
+      - name: 添加GitHub Pages
         run: |
-          echo "检查并修复中文乱码问题..."
+          echo "添加GitHub Pages index.html..."
           
           # 修改输出文件的权限
           sudo chown -R $USER:$USER output/
           sudo chmod -R 755 output/
-          
-          # 确保文件使用UTF-8编码
-          # if [ -f "output/all.yaml" ]; then
-          #   # 运行Python脚本处理文件
-          #   python3 fix_unicode.py output/all.yaml
-          #   echo "已处理 all.yaml 文件编码"
-          # fi
           
           # 创建一个包含正确编码声明的HTML文件，用于访问YAML
           echo '<!DOCTYPE html>' > output/index.html
